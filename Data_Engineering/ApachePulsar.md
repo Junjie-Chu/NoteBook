@@ -31,7 +31,7 @@ $ cd apache-pulsar-2.7.0
 $ tmux new -s pulsar    
 2. Start a local cluster using the following pulsar command by navigating to bin directory, and specifying standalone mode. 导航进入bin目录，启动一个本地集群，模式为standalone  
 $ bin/pulsar standalone
-3. 如果pulsar成功安装，则没有error。是否正常运行，通过检查consumer是否有接收message来确定。      
+3. 如果pulsar成功安装，则没有error。官方指导上只有三条info，在我实际操作中是不一致的。是否正常运行，通过检查consumer是否有接收message来确定。      
 
 
 
