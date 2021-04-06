@@ -1,5 +1,4 @@
 # Hadoop（HDFS&MapReduce）
-[TOC]
 
 ## Hadoop 的组成  
 (1) Hadoop HDFS：一个高可靠、高吞吐量的分布式文件系统；  
