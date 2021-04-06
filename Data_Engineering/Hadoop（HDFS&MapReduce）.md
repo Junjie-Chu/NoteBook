@@ -110,6 +110,33 @@ NameNode与SecondaryNameNode 的区别与联系？
 （2）在主namenode发生故障时（假设没有及时备份数据），可以从SecondaryNameNode恢复数据。 
 
 ## MapReduce原理（映射化简） 
+Key stages of MapReduce  
+1.Split input  
+2.Map  
+3.Shuffle  
+4.Reduce  
+我们专注于Map和Reduce，洗牌（shuffle）等由架构完成。MapReduce就是分治，并行处理。
+![image](https://user-images.githubusercontent.com/65893273/113695516-83fca200-9703-11eb-942c-b046517194ee.png)  
+
+两个例子：  
+1. word count  
+![image](https://user-images.githubusercontent.com/65893273/113696197-44828580-9704-11eb-86ec-313602dae080.png)  
+input：  
+输入一个大文件。  
+split：  
+将大文件切分为若干小文件（若干行）。此处为0/1/2三行。
+map：
+将每一行切分为单个单词。每个单词和1形成一个键值对。如（Deer，1）。  
+map阶段也可以进行初步化简，比如car，1/car，1/river，1，可以在shuffle之前化简为car，2/river，1  
+shuffle 或者 sort：  
+现在大部分由架构自己完成。该部分输出为形如【（car，1）(car，1) (car,1)】，【(deer，1) (deer，1)】等  
+Reduce：  
+对上一步的结果进行化简。  
+【（car，1）(car，1) (car,1)】，【(deer，1) (deer，1)】化简为【 (car，3)】，【(deer，2)】  
+Finalize:  
+合并为一个文件。  
+
+过程中shuffle等是乱序的，执行过程是高度并行的。  
 
 
 
