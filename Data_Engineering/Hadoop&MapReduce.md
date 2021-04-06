@@ -1,4 +1,11 @@
 # Hadoop&MapReduce
+
+Hadoop 的组成  
+(1) Hadoop HDFS：一个高可靠、高吞吐量的分布式文件系统；  
+(2) Hadoop MapReduce：一个分布式的离线并行计算框架；  
+(3) Hadoop YARN：作业调度与集群资源管理的框架；  
+(4) Hadoop Common：支持其他模块的工具模块。  
+
 ## HDFS原理  
 HDFS 是 Hadoop 分布式文件系统，并且运行在普通硬件上。这就意味着 HDFS 不需要优秀的硬件资源、高昂的硬件成本，只需要简单的物理机组成分布式集群，HDFS 使用横向拓展（增加机器）来提高存储容量，而非纵向扩展（提高单个机器的配置）。HDFS 并非唯一的分布式文件系统，还有 GFS、TFS 等，但 HDFS 是使用最多的开源分布式文件存储系统，具有高度容错（highly fault-tolerant）及低成本的特点。  
 ### HDFS架构及构成
