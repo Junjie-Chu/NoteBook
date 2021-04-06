@@ -1,4 +1,4 @@
-# Hadoop&MapReduce
+# Hadoop（HDFS&MapReduce）
 
 Hadoop 的组成  
 (1) Hadoop HDFS：一个高可靠、高吞吐量的分布式文件系统；  
@@ -108,6 +108,9 @@ NameNode与SecondaryNameNode 的区别与联系？
 2）联系：  
 （1）SecondaryNameNode中保存了一份和namenode一致的镜像文件（fsimage）和编辑日志（edits）。  
 （2）在主namenode发生故障时（假设没有及时备份数据），可以从SecondaryNameNode恢复数据。 
+
+## MapReduce原理（映射化简） 
+
 
 
 
