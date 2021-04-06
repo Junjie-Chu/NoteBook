@@ -109,18 +109,42 @@ NameNode与SecondaryNameNode 的区别与联系？
 （1）SecondaryNameNode中保存了一份和namenode一致的镜像文件（fsimage）和编辑日志（edits）。  
 （2）在主namenode发生故障时（假设没有及时备份数据），可以从SecondaryNameNode恢复数据。 
 
-## MapReduce原理（映射化简） 
+## MapReduce原理（映射化简）
+### MapReduce流程
+![image](https://user-images.githubusercontent.com/65893273/113695516-83fca200-9703-11eb-942c-b046517194ee.png)  
 Key stages of MapReduce  
 1.Split input  
 2.Map  
 3.Shuffle  
 4.Reduce  
 我们专注于Map和Reduce，洗牌（shuffle）等由架构完成。MapReduce就是分治，并行处理。
-![image](https://user-images.githubusercontent.com/65893273/113695516-83fca200-9703-11eb-942c-b046517194ee.png)  
 
+Reduce  
+某个键的所有键值对都会被分发到同一个reduce操作中。确切的说，这个键和这个键所对应的所有值都会被传递给同一个Reducer。reduce过程的目的是将值的集合转换成一个值（例如求和或者求平均），或者转换成另一个集合。这个Reducer最终会产生一个键值对。需要说明的是，如果job不需要reduce过程的话，那么reduce过程也是可以不用的。    
+单个reduce任务的输入通常来自于所有mapper的输出。排过序的map输出需通过网络传输发送到运行reduce任务的节点，数据在reduce端合并并由用户定义的reduce函数处理。  
+reduce任务的数量并非由输入数据的大小决定，而是独立指定的。  
+真实的应用中，几乎所有作业都会把reducer的个数设置成较大的数字，否则由于所有中间数据都会放到一个reduce任务中，作业的处理效率就会及其低下。  
+增加reducer的数量能缩短reduce进程；但是reducer数量过多又会导致小文件过多而不够优化。一条经验法则是：目标reducer保持每个运行在5分钟左右，且产生至少一个HDFS块的输出比较合适。  
+
+
+### MapReduce架构
+![image](https://user-images.githubusercontent.com/65893273/113707803-0345a200-9713-11eb-8c8a-7e9fd3f491ef.png)  
+和HDFS一样，MapReduce也是采用Master/Slave的架构，MapReduce包含四个组成部分，分别为Client、JobTracker、TaskTracker和Task。  
+1）Client 客户端    
+　　每一个 Job 都会在用户端通过 Client 类将应用程序以及配置参数 Configuration 打包成 JAR 文件存储在 HDFS，并把路径提交到 JobTracker 的 master 服务，然后由 master 创建每一个 Task（即 MapTask 和 ReduceTask） 将它们分发到各个 TaskTracker 服务中去执行。    
+2）JobTracker  
+   JobTracke负责资源监控和作业调度。JobTracker 监控所有TaskTracker 与job的健康状况，一旦发现失败，就将相应的任务转移到其他节点；同时，JobTracker 会跟踪任务的执行进度、资源使用量等信息，并将这些信息告诉任务调度器，而调度器会在资源出现空闲时，选择合适的任务使用这些资源。在Hadoop中，任务调度器是一个可插拔的模块，用户可以根据自己的需要设计相应的调度器。  
+3）TaskTracker  
+　　TaskTracker 会周期性地通过Heartbeat 将本节点上资源的使用情况和任务的运行进度汇报给JobTracker，同时接收JobTracker 发送过来的命令并执行相应的操作（如启动新任务、杀死任务等）。TaskTracker 使用"slot"等量划分本节点上的资源量。"slot"代表计算资源（CPU、内存等）。一个Task 获取到一个slot 后才有机会运行，而Hadoop 调度器的作用就是将各个TaskTracker 上的空闲slot分配给Task 使用。slot分为Map slot 和Reduce slot 两种，分别供Map Task 和Reduce Task 使用。TaskTracker 通过slot 数目（可配置参数）限定Task 的并发度。  
+4）Task  
+　　Task 分为Map Task 和Reduce Task 两种，均由TaskTracker 启动。HDFS 以固定大小的block 为基本单位存储数据，而对于MapReduce 而言，其处理单位是split。split 是一个逻辑概念，它只包含一些元数据信息，比如数据起始位置、数据长度、数据所在节点等。它的划分方法完全由用户自己决定。但需要注意的是，split 的多少决定了Map Task 的数目，因为每个split 只会交给一个Map Task 处理。  
+
+### MapReduce例子
 两个例子：  
 1. word count  
 ![image](https://user-images.githubusercontent.com/65893273/113696197-44828580-9704-11eb-86ec-313602dae080.png)  
+内部流程图：  
+![image](https://user-images.githubusercontent.com/65893273/113708073-60415800-9713-11eb-99c2-b569123850f3.png)  
 input：  
 输入一个大文件。  
 split：  
