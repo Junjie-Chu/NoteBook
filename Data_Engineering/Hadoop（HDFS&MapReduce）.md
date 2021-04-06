@@ -1,6 +1,7 @@
 # Hadoop（HDFS&MapReduce）
+[TOC]
 
-Hadoop 的组成  
+## Hadoop 的组成  
 (1) Hadoop HDFS：一个高可靠、高吞吐量的分布式文件系统；  
 (2) Hadoop MapReduce：一个分布式的离线并行计算框架；  
 (3) Hadoop YARN：作业调度与集群资源管理的框架；  
