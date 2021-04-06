@@ -133,11 +133,11 @@ reduce任务的数量并非由输入数据的大小决定，而是独立指定�
 1）Client 客户端    
 　　每一个 Job 都会在用户端通过 Client 类将应用程序以及配置参数 Configuration 打包成 JAR 文件存储在 HDFS，并把路径提交到 JobTracker 的 master 服务，然后由 master 创建每一个 Task（即 MapTask 和 ReduceTask） 将它们分发到各个 TaskTracker 服务中去执行。    
 2）JobTracker  
-   JobTracke负责资源监控和作业调度。JobTracker 监控所有TaskTracker 与job的健康状况，一旦发现失败，就将相应的任务转移到其他节点；同时，JobTracker 会跟踪任务的执行进度、资源使用量等信息，并将这些信息告诉任务调度器，而调度器会在资源出现空闲时，选择合适的任务使用这些资源。在Hadoop中，任务调度器是一个可插拔的模块，用户可以根据自己的需要设计相应的调度器。  
+   有单点故障。JobTracke负责资源监控和作业调度。JobTracker 监控所有TaskTracker 与job的健康状况，一旦发现失败，就将相应的任务转移到其他节点；同时，JobTracker 会跟踪任务的执行进度、资源使用量等信息，并将这些信息告诉任务调度器，而调度器会在资源出现空闲时，选择合适的任务使用这些资源。在Hadoop中，任务调度器是一个可插拔的模块，用户可以根据自己的需要设计相应的调度器。  
 3）TaskTracker  
-　　TaskTracker 会周期性地通过Heartbeat 将本节点上资源的使用情况和任务的运行进度汇报给JobTracker，同时接收JobTracker 发送过来的命令并执行相应的操作（如启动新任务、杀死任务等）。TaskTracker 使用"slot"等量划分本节点上的资源量。"slot"代表计算资源（CPU、内存等）。一个Task 获取到一个slot 后才有机会运行，而Hadoop 调度器的作用就是将各个TaskTracker 上的空闲slot分配给Task 使用。slot分为Map slot 和Reduce slot 两种，分别供Map Task 和Reduce Task 使用。TaskTracker 通过slot 数目（可配置参数）限定Task 的并发度。  
+　　TaskTracker 会周期性地通过Heartbeat 将本节点上资源的使用情况和任务的运行进度汇报给JobTracker，同时接收JobTracker 发送过来的命令并执行相应的操作（如启动新任务、杀死任务等）。TaskTracker 使用"slot"等量划分本节点上的资源量。"slot"代表计算资源（CPU、内存等）。一个Task 获取到一个slot 后才有机会运行，而Hadoop 调度器的作用就是将各个TaskTracker 上的空闲slot分配给Task 使用。slot分为Map slot 和Reduce slot 两种，分别供Map Task 和Reduce Task 使用。TaskTracker 通过slot 数目（可配置参数）限定Task 的并发度。TaskTracker 周期性的向 JobTracker 汇报心跳，如果一定的时间内没有汇报这个心跳，JobTracker 就认为该TaskTracker 挂掉了，它就会把上面所有任务调度到其它TaskTracker（节点）上运行。这样即使某个节点挂了，也不会影响整个集群的运行。  
 4）Task  
-　　Task 分为Map Task 和Reduce Task 两种，均由TaskTracker 启动。HDFS 以固定大小的block 为基本单位存储数据，而对于MapReduce 而言，其处理单位是split。split 是一个逻辑概念，它只包含一些元数据信息，比如数据起始位置、数据长度、数据所在节点等。它的划分方法完全由用户自己决定。但需要注意的是，split 的多少决定了Map Task 的数目，因为每个split 只会交给一个Map Task 处理。  
+　　Task 分为Map Task 和Reduce Task 两种，均由TaskTracker 启动。HDFS 以固定大小的block 为基本单位存储数据，而对于MapReduce 而言，其处理单位是split。split 是一个逻辑概念，它只包含一些元数据信息，比如数据起始位置、数据长度、数据所在节点等。它的划分方法完全由用户自己决定。但需要注意的是，split 的多少决定了Map Task 的数目，因为每个split 只会交给一个Map Task 处理。MapTask和ReduceTask 也可能运行挂掉。比如内存超出了或者磁盘挂掉了，这个任务也就挂掉了。 这个时候 TaskTracker 就会把每个MapTask和ReduceTask的运行状态回报给 JobTracker，JobTracker 一旦发现某个Task挂掉了，它就会通过调度器把该Task调度到其它节点上。这样的话，即使任务挂掉了，也不会影响应用程序的运行。    
 
 ### MapReduce例子
 两个例子：  
@@ -161,6 +161,14 @@ Finalize:
 合并为一个文件。  
 
 过程中shuffle等是乱序的，执行过程是高度并行的。  
+
+2.倒排索引（单词出现在哪些文档里？）
+![image](https://user-images.githubusercontent.com/65893273/113709607-486ad380-9715-11eb-8582-17ea88f44890.png)    
+1.首先输入很多的文档，这里面每一行的不是文档编号了，我们要存它的文档编号。  
+2.拆解的时候加入新的概念，Worker，这里有三个Worker，每个Worker负责1行，也可以负责多行，每个Worker就需要进行Map拆解，把每个单词都拆成单词和出现的文档ID。（food，2）（music，2）      
+3.接着Shuffle有两个新Worker，他们把单词一拆，数据一部分给Worker4，一部分给Worker5，拿到以后会排个序，这也是最基本的Shuffle过程。比如，把food的放在一起。（food，0）（food，2）      
+4.接着就是Reduce，把相同的东西合并到一起去，比如food出现在两个文档里，就是0和2。（food，（0，2））.  
+5.最终就是把这些结果放到一起去就可以让我们查找了。  
 
 
 
