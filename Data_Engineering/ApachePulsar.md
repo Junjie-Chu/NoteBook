@@ -33,7 +33,18 @@ $ tmux new -s pulsar
 $ bin/pulsar standalone
 3. 如果pulsar成功安装，则没有error。官方指导上只有三条info，在我实际操作中是不一致的。是否正常运行，通过检查consumer是否有接收message来确定。      
 
+## Pulsar里subscription类型的理解
+Pulsar订阅有四种类型:  
+1.独占 Exclusive  
+2.灾备 failover  
+3.共享 shared  
+4.键共享 key-shared  
 
+example:  
+1.现在有1个topic,多个consumer以独占模式订阅,且订阅名字相同(subscription_name),报错(error!)  
+2.现在有1个topic,多个consumer以独占模式订阅,且订阅名字不同(subscription_name),所有consumer都会接收到topic中所有的message  
+3.现在有1个topic,多个consumer以shared模式订阅,订阅名字相同(subscription_name),每个consumer只会接收到topic中的部分message(分配给它的message)    
+4.现在有1个topic,多个consumer以灾备模式订阅,且订阅名字相同(subscription_name),运行时,第一个consumer先接收topic中的所有数据,如果不坏,其他consumer不接收message.如果第一个consumer坏了,第二个consumer接替它的位置.    
 
 
 
