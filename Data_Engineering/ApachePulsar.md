@@ -40,7 +40,7 @@ Pulsar订阅有四种类型:
 3.共享 shared  
 4.键共享 key-shared  
 
-example:  
+Examples:  
 1.现在有1个topic,多个consumer以独占模式订阅,且订阅名字相同(subscription_name),报错(error!)  
 2.现在有1个topic,多个consumer以独占模式订阅,且订阅名字不同(subscription_name),所有consumer都会接收到topic中所有的message  
 3.现在有1个topic,多个consumer以shared模式订阅,订阅名字相同(subscription_name),每个consumer只会接收到topic中的部分message(分配给它的message)    
